@@ -144,38 +144,52 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		}
 		if imageView.image == nil {
 			showAlert(asError: true, withMessage: "Please choose an image first")
-		} else {
-			showLoader()
-			DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
-				var errorMsg = ""
-				let serialNumber = self.getFirstBtPrinter()
+		}
+		// check image dimensions
+		let maxWidth: Int = 380
+		var targetWidth: Int = cgImage.width
+		var targetHeight: Int = cgImage.height
+		if targetWidth > maxWidth {
+			let scaleFactor: Float = Float(targetWidth) / Float(maxWidth)
+			targetWidth = maxWidth
+			targetHeight = Int( Float(targetHeight) / scaleFactor )
+		}
+		showLoader()
+		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+			var errorMsg = ""
+			let serialNumber = self.getFirstBtPrinter()
+			
+			if serialNumber.isEmpty {
+				errorMsg = "No BT printer found"
+			} else {
+				// Instantiate connection to Zebra Bluetooth accessory
+				let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: serialNumber)
 				
-				if serialNumber.isEmpty {
-					errorMsg = "No BT printer found"
+				// Open the connection - physical connection is established here.
+				if !(thePrinterConn?.open() ?? false) {
+					errorMsg = "Error opening connection to printer " + serialNumber
 				} else {
-					// Instantiate connection to Zebra Bluetooth accessory
-					let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: serialNumber)
-					
-					// Open the connection - physical connection is established here.
-					if !(thePrinterConn?.open() ?? false) {
-						errorMsg = "Error opening connection to printer " + serialNumber
-					} else {
-						// try to print image
-						do {
-							let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
-							try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: 0, withWidth: 320, withHeight: 480, andIsInsideFormat: false)
-						} catch let printError as NSError {
-							errorMsg = printError.localizedDescription
-							print(printError.localizedDescription)
-						}
+					// try to print image
+					print("Target print size: \(targetWidth) x \(targetHeight)")
+					do {
+						// configure label length
+						try SGD.set("zpl.label_length", withValue: String(targetHeight), andWithPrinterConnection: thePrinterConn)
+						let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
+						try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: 0, withWidth: targetWidth, withHeight: targetHeight, andIsInsideFormat: false)
+						// configure label length
+						try SGD.set("zpl.label_length", withValue: "20", andWithPrinterConnection: thePrinterConn)
+						//
+					} catch let printError as NSError {
+						errorMsg = printError.localizedDescription
+						print(printError.localizedDescription)
 					}
 				}
-				
-				DispatchQueue.main.async {
-					self.hideLoader()
-					if !errorMsg.isEmpty {
-						self.showAlert(asError: true, withMessage: errorMsg)
-					}
+			}
+			
+			DispatchQueue.main.async {
+				self.hideLoader()
+				if !errorMsg.isEmpty {
+					self.showAlert(asError: true, withMessage: errorMsg)
 				}
 			}
 		}
