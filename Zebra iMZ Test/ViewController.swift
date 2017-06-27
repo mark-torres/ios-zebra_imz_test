@@ -147,6 +147,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		}
 		// check image dimensions
 		let maxWidth: Int = 380
+		let topMargin: Int = 100
 		var targetWidth: Int = cgImage.width
 		var targetHeight: Int = cgImage.height
 		if targetWidth > maxWidth {
@@ -173,9 +174,9 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 					print("Target print size: \(targetWidth) x \(targetHeight)")
 					do {
 						// configure label length
-						try SGD.set("zpl.label_length", withValue: String(targetHeight), andWithPrinterConnection: thePrinterConn)
+						try SGD.set("zpl.label_length", withValue: String(targetHeight + topMargin), andWithPrinterConnection: thePrinterConn)
 						let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
-						try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: 0, withWidth: targetWidth, withHeight: targetHeight, andIsInsideFormat: false)
+						try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: topMargin, withWidth: targetWidth, withHeight: targetHeight, andIsInsideFormat: false)
 						// configure label length
 						try SGD.set("zpl.label_length", withValue: "20", andWithPrinterConnection: thePrinterConn)
 						//
