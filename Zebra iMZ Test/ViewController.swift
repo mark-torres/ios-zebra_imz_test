@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITextFieldDelegate {
 	
 	@IBOutlet weak var textMessage: UITextField!
 	
@@ -18,10 +18,18 @@ class ViewController: UIViewController {
 	
 	@IBOutlet weak var loaderSpinner: UIActivityIndicatorView!
 	
+	var imagePicker: UIImagePickerController!
+	
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		// Do any additional setup after loading the view, typically from a nib.
+		
+		imagePicker = UIImagePickerController()
+		imagePicker.delegate = self
+		imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary
+		
+		textMessage.delegate = self
 	}
 
 	override func didReceiveMemoryWarning() {
@@ -39,11 +47,31 @@ class ViewController: UIViewController {
 	}
 	
 	@IBAction func tapChooseImage(_ sender: AnyObject) {
-		showAlert(asError: false, withMessage: "Tapped 'Choose image'")
+		present(imagePicker, animated: true, completion: nil)
 	}
 	
 	@IBAction func tapPrintImage(_ sender: AnyObject) {
-		showAlert(asError: false, withMessage: "Tapped 'Print image'")
+		printImageCpcl()
+	}
+	
+	// MARK - Text field delegate
+	
+	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+		if textField == textMessage {
+			textField.resignFirstResponder()
+			return true
+		}
+		return true
+	}
+	
+	// MARK - ImagePickerController Delegate
+	
+	// https://makeapppie.com/2014/12/04/swift-swift-using-the-uiimagepickercontroller-for-a-camera-and-photo-library/
+	func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+		let chosenImage = info[UIImagePickerControllerOriginalImage] as! UIImage
+		imageView.image = chosenImage
+		
+		dismiss(animated: true, completion: nil)
 	}
 	
 	// MARK - iMZ printer
@@ -110,6 +138,47 @@ class ViewController: UIViewController {
 	}
 	
 	func printImageCpcl() -> Void {
+		guard let cgImage = imageView.image?.cgImage else {
+			showAlert(asError: true, withMessage: "Error getting CGImage")
+			return
+		}
+		if imageView.image == nil {
+			showAlert(asError: true, withMessage: "Please choose an image first")
+		} else {
+			showLoader()
+			DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+				var errorMsg = ""
+				let serialNumber = self.getFirstBtPrinter()
+				
+				if serialNumber.isEmpty {
+					errorMsg = "No BT printer found"
+				} else {
+					// Instantiate connection to Zebra Bluetooth accessory
+					let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: serialNumber)
+					
+					// Open the connection - physical connection is established here.
+					if !(thePrinterConn?.open() ?? false) {
+						errorMsg = "Error opening connection to printer " + serialNumber
+					} else {
+						// try to print image
+						do {
+							let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
+							try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: 0, withWidth: 320, withHeight: 480, andIsInsideFormat: false)
+						} catch let printError as NSError {
+							errorMsg = printError.localizedDescription
+							print(printError.localizedDescription)
+						}
+					}
+				}
+				
+				DispatchQueue.main.async {
+					self.hideLoader()
+					if !errorMsg.isEmpty {
+						self.showAlert(asError: true, withMessage: errorMsg)
+					}
+				}
+			}
+		}
 	}
 	
 	// MARK - Misc methods
