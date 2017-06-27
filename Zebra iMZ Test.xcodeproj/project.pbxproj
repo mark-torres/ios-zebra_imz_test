@@ -12,6 +12,7 @@
 		A984D1731F01CFF100E775DA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1711F01CFF100E775DA /* Main.storyboard */; };
 		A984D1751F01CFF100E775DA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A984D1741F01CFF100E775DA /* Assets.xcassets */; };
 		A984D1781F01CFF100E775DA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1761F01CFF100E775DA /* LaunchScreen.storyboard */; };
+		A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9F44A431F02C8EC007A0285 /* libZSDK_API.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,8 @@
 		A984D1741F01CFF100E775DA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A984D1771F01CFF100E775DA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A984D1791F01CFF100E775DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A9F44A3F1F02C829007A0285 /* Zebra iMZ Test-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Zebra iMZ Test-Bridging-Header.h"; sourceTree = "<group>"; };
+		A9F44A431F02C8EC007A0285 /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libZSDK_API.a; path = ../../../../Applications/link_os_sdk/iOS/v1.4.957/lib/libZSDK_API.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +44,7 @@
 			children = (
 				A984D16C1F01CFF100E775DA /* Zebra iMZ Test */,
 				A984D16B1F01CFF100E775DA /* Products */,
+				A9F44A421F02C8EC007A0285 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,8 +65,17 @@
 				A984D1741F01CFF100E775DA /* Assets.xcassets */,
 				A984D1761F01CFF100E775DA /* LaunchScreen.storyboard */,
 				A984D1791F01CFF100E775DA /* Info.plist */,
+				A9F44A3F1F02C829007A0285 /* Zebra iMZ Test-Bridging-Header.h */,
 			);
 			path = "Zebra iMZ Test";
+			sourceTree = "<group>";
+		};
+		A9F44A421F02C8EC007A0285 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A9F44A431F02C8EC007A0285 /* libZSDK_API.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -97,6 +111,7 @@
 					A984D1691F01CFF100E775DA = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = VPJJQVPPXZ;
+						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -259,11 +274,20 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				DEVELOPMENT_TEAM = VPJJQVPPXZ;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = /Applications/link_os_sdk/iOS/v1.4.957/lib/include;
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /Applications/link_os_sdk/iOS/v1.4.957/lib;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.hsoft.Zebra-iMZ-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Zebra iMZ Test/Zebra iMZ Test-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -272,11 +296,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				DEVELOPMENT_TEAM = VPJJQVPPXZ;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = /Applications/link_os_sdk/iOS/v1.4.957/lib/include;
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = /Applications/link_os_sdk/iOS/v1.4.957/lib;
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.hsoft.Zebra-iMZ-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Zebra iMZ Test/Zebra iMZ Test-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
@@ -300,6 +332,7 @@
 				A984D17E1F01CFF100E775DA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
