@@ -20,6 +20,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	
 	var imagePicker: UIImagePickerController!
 	
+	let supportedModels: [String] = ["imz220", "imz320"]
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -137,6 +138,36 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		}
 	}
 	
+	func getPrintArea(forImage image: CGImage, forModel model: String) -> CGSize {
+		let printerModel = supportedModels.contains(model) ? model : supportedModels[0]
+		let maxWidthZ220: Int = 380 // iMZ220-200dpi: (2 x 200) - 20 = 380
+		let maxWidthMz320: Int = 580 // iMZ320-200dpi: (3 x 200) - 20 = 580
+		let maxWidth: Int = (printerModel == supportedModels[0]) ? maxWidthZ220 : maxWidthMz320
+		var targetWidth: Int = image.width
+		var targetHeight: Int = image.height
+		if targetWidth > maxWidth {
+			let scaleFactor: Float = Float(targetWidth) / Float(maxWidth)
+			targetWidth = maxWidth
+			targetHeight = Int( Float(targetHeight) / scaleFactor )
+		} else if targetWidth < maxWidth {
+			let scaleFactor: Float = Float(maxWidth) / Float(targetWidth)
+			targetWidth = maxWidth
+			targetHeight = Int( Float(targetHeight) * Float(scaleFactor) )
+		}
+		return CGSize(width: targetWidth, height: targetHeight)
+	}
+	
+	func getPrinterModel(fromString string: String) -> String {
+		let hostRange = NSRange(location: 0, length: string.characters.count)
+		let reModel = try! NSRegularExpression(pattern: "^(imz\\d+)", options: NSRegularExpression.Options.caseInsensitive)
+		let modelMatches = reModel.matches(in: string, options: NSRegularExpression.MatchingOptions.withoutAnchoringBounds, range: hostRange)
+		var printerModel = supportedModels[0]
+		if modelMatches.count > 0 {
+			printerModel = (string as NSString).substring(with: modelMatches[0].range)
+		}
+		return printerModel.lowercased()
+	}
+	
 	func printImageCpcl() -> Void {
 		guard let cgImage = imageView.image?.cgImage else {
 			showAlert(asError: true, withMessage: "Error getting CGImage")
@@ -145,38 +176,31 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		if imageView.image == nil {
 			showAlert(asError: true, withMessage: "Please choose an image first")
 		}
-		// check image dimensions
-		let maxWidth: Int = 380
-		let topMargin: Int = 100
-		var targetWidth: Int = cgImage.width
-		var targetHeight: Int = cgImage.height
-		if targetWidth > maxWidth {
-			let scaleFactor: Float = Float(targetWidth) / Float(maxWidth)
-			targetWidth = maxWidth
-			targetHeight = Int( Float(targetHeight) / scaleFactor )
-		}
 		showLoader()
 		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
 			var errorMsg = ""
 			let serialNumber = self.getFirstBtPrinter()
-			
 			if serialNumber.isEmpty {
 				errorMsg = "No BT printer found"
 			} else {
 				// Instantiate connection to Zebra Bluetooth accessory
 				let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: serialNumber)
-				
 				// Open the connection - physical connection is established here.
 				if !(thePrinterConn?.open() ?? false) {
 					errorMsg = "Error opening connection to printer " + serialNumber
 				} else {
 					// try to print image
-					print("Target print size: \(targetWidth) x \(targetHeight)")
 					do {
+						// get printer ID
+						let hostId = try SGD.get("device.host_identification", withPrinterConnection: thePrinterConn)
+						let printerModel = self.getPrinterModel(fromString: hostId)
+						let printArea = self.getPrintArea(forImage: cgImage, forModel: printerModel)
+						print("Target print size: \(printArea.width) x \(printArea.height)")
+						let topMargin: Int = 100
 						// configure label length
-						try SGD.set("zpl.label_length", withValue: String(targetHeight + topMargin), andWithPrinterConnection: thePrinterConn)
+						try SGD.set("zpl.label_length", withValue: String(Int(printArea.width) + topMargin), andWithPrinterConnection: thePrinterConn)
 						let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
-						try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: topMargin, withWidth: targetWidth, withHeight: targetHeight, andIsInsideFormat: false)
+						try printer?.getGraphicsUtil().print(cgImage, atX: 0, atY: topMargin, withWidth: Int(printArea.width), withHeight: Int(printArea.height), andIsInsideFormat: false)
 						// configure label length
 						try SGD.set("zpl.label_length", withValue: "20", andWithPrinterConnection: thePrinterConn)
 						//
