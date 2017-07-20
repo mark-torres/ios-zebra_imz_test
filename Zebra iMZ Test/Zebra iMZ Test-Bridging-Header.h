@@ -6,3 +6,4 @@
 #import "ZebraPrinter.h"
 #import "ZebraPrinterFactory.h"
 #import <SGD.h>
+#import "PrinterStatus.h"
