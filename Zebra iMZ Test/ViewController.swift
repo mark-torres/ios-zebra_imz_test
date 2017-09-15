@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITextFieldDelegate {
+class ViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITextFieldDelegate, BXPrinterControlDelegate {
 	
 	@IBOutlet weak var textMessage: UITextField!
 	
@@ -22,19 +22,27 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	
 	@IBOutlet var printerInfoLabel: UILabel!
 	
+	var bxlPrinterController: BXPrinterController!
+	
+	var bxlPrinter: BXPrinter!
+	
 	var printerModel: String!
 	
-	var availablePrinters: [String]!
+	var availablePrinters: [BTPrinterData]!
 	
-	var selectedPrinter: String!
+	var selectedPrinter: BTPrinterData!
 	
 	var imagePicker: UIImagePickerController!
 	
-	let supportedModels: [String] = ["imz220", "imz320"]
+	let supportedZbrModels: [String] = ["imz220", "imz320"]
+	
+	let supportedBxlModels: [String] = ["spp-r200ii"]
 	
 	var printerSelected: Bool!
 	
 	var imageSelected: Bool!
+	
+	var printerConnected: Bool!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -47,10 +55,13 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		textMessage.delegate = self
 		
 		availablePrinters = []
-		selectedPrinter = ""
+		selectedPrinter = BTPrinterData()
 		printerSelected = false
 		printerModel = ""
 		imageSelected = false
+		printerConnected = false
+		
+		bxlInitPrinter()
 	}
 
 	override func didReceiveMemoryWarning() {
@@ -63,7 +74,16 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	@IBAction func tapPrintText(_ sender: AnyObject) {
 		let text = textMessage.text?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
 		if !text.isEmpty {
-			printTextCpcl(text)
+			switch selectedPrinter.brand {
+			case "zebra":
+				zbrPrintText(text)
+				break
+			case "bixolon":
+				bxlPrintText(text)
+				break
+			default:
+				showAlert(asError: true, withMessage: "Unknown printer brand")
+			}
 		}
 	}
 	
@@ -76,15 +96,19 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 			showAlert(asError: true, withMessage: "You need to pick an image first")
 			return
 		}
-		printImageCpcl()
+		zbrPrintImage()
 	}
 	
 	@IBAction func tapResetPrinter(_ sender: Any) {
-		resetPrinter()
+		if selectedPrinter.brand == "zebra" {
+			resetZbrPrinter()
+		} else {
+			showAlert(asError: false, withMessage: "Reset not implemented for selected printer")
+		}
 	}
 	
 	@IBAction func tapSelectPrinter(_ sender: Any) {
-		selectPrinter()
+		findBtPrinters()
 	}
 	
 	// MARK: - Text field delegate
@@ -107,7 +131,67 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		dismiss(animated: true, completion: nil)
 	}
 	
-	// MARK: - iMZ printer
+	// MARK: Common printer methods
+	
+	func findBtPrinters() -> Void {
+		showLoader(withMessage: "Looking for connected printers")
+		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+			self.availablePrinters = []
+			let sam: EAAccessoryManager = EAAccessoryManager.shared()
+			let connectedAccessories = sam.connectedAccessories
+			for accessory in connectedAccessories {
+				// get Zebra printers
+				if accessory.protocolStrings.index(of: "com.zebra.rawport")! >= 0 {
+					let btPrinter = BTPrinterData()
+					btPrinter.brand = "zebra"
+					btPrinter.name = accessory.name
+					btPrinter.serialNumber = accessory.serialNumber
+					self.availablePrinters.append(btPrinter)
+				}
+				// get Bixolon printers
+				if accessory.protocolStrings.index(of: "com.bixolon.protocol")! >= 0 {
+					let btPrinter = BTPrinterData()
+					btPrinter.brand = "bixolon"
+					btPrinter.name = accessory.name
+					btPrinter.serialNumber = accessory.serialNumber
+					self.availablePrinters.append(btPrinter)
+				}
+			}
+			DispatchQueue.main.async {
+				self.hideLoader()
+				self.displayPrinterList()
+			}
+		}
+	}
+	
+	func displayPrinterList() -> Void {
+		guard availablePrinters.count > 0 else {
+			showAlert(asError: true, withMessage: "There are no printers connected")
+			return
+		}
+		let actionSheet = UIAlertController(title: "Available printers", message: "Select the printer you want to use", preferredStyle: UIAlertControllerStyle.actionSheet)
+		for btPrinterData in availablePrinters {
+			let action = UIAlertAction(title: btPrinterData.name, style: UIAlertActionStyle.default, handler: { (theAction) in
+				self.selectedPrinter = btPrinterData
+				print("Selected printer: " + self.selectedPrinter.serialNumber)
+				self.printerSelected = true
+				self.printerInfoLabel.text = self.selectedPrinter.name
+				self.printerInfoLabel.isHighlighted = true
+				// check printer brand before initialize
+				if self.selectedPrinter.brand == "zebra" {
+					self.zbInitPrinter()
+				} else if self.selectedPrinter.brand == "bixolon" {
+					self.bxlInitPrinter()
+				}
+			})
+			actionSheet.addAction(action)
+		}
+		let cancel = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil)
+		actionSheet.addAction(cancel)
+		present(actionSheet, animated: true, completion: nil)
+	}
+	
+	// MARK: - Zebra printer
 	
 	func getFirstBtPrinter() -> String {
 		var serialNumber: String = ""
@@ -129,59 +213,19 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		return serialNumber
 	}
 	
-	func selectPrinter() -> Void {
-		showLoader(withMessage: "Looking for connected printers")
-		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
-			self.availablePrinters = []
-			let sam: EAAccessoryManager = EAAccessoryManager.shared()
-			let connectedAccessories = sam.connectedAccessories
-			for accessory in connectedAccessories {
-				if accessory.protocolStrings.index(of: "com.zebra.rawport")! >= 0 {
-					self.availablePrinters.append(accessory.serialNumber)
-				}
-			}
-			DispatchQueue.main.async {
-				self.hideLoader()
-				self.displayPrinterList()
-			}
-		}
-	}
-	
-	func displayPrinterList() -> Void {
-		guard availablePrinters.count > 0 else {
-			showAlert(asError: true, withMessage: "There are no printers connected")
-			return
-		}
-		let actionSheet = UIAlertController(title: "Available printers", message: "Select the printer you want to use", preferredStyle: UIAlertControllerStyle.actionSheet)
-		for serialNumber in availablePrinters {
-			let action = UIAlertAction(title: serialNumber, style: UIAlertActionStyle.default, handler: { (theAction) in
-				self.selectedPrinter = theAction.title ?? ""
-				print("Selected printer: " + self.selectedPrinter)
-				self.printerSelected = true
-				self.printerInfoLabel.text = self.selectedPrinter
-				self.printerInfoLabel.isHighlighted = true
-				self.initPrinter()
-			})
-			actionSheet.addAction(action)
-		}
-		let cancel = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil)
-		actionSheet.addAction(cancel)
-		present(actionSheet, animated: true, completion: nil)
-	}
-	
-	func initPrinter() -> Void {
-		guard selectedPrinter.isEmpty == false else {
-			showAlert(asError: true, withMessage: "Invalid serial number: " + selectedPrinter)
+	func zbInitPrinter() -> Void {
+		guard selectedPrinter.serialNumber.isEmpty == false else {
+			showAlert(asError: true, withMessage: "Invalid serial number: " + selectedPrinter.serialNumber)
 			return
 		}
 		showLoader(withMessage: "Configuring printer")
 		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
 			var errorMsg = ""
 			// create connection
-			let thePrinterConnection = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter)
+			let thePrinterConnection = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter.serialNumber)
 			// try to open the connection
 			if !(thePrinterConnection?.open() ?? false) {
-				errorMsg = "Error opening connection with printer " + self.selectedPrinter
+				errorMsg = "Error opening connection with printer " + self.selectedPrinter.serialNumber
 			} else {
 				// set printer language to ZPL
 				do {
@@ -190,7 +234,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 					// get printer ID
 					let hostId = try SGD.get("device.host_identification", withPrinterConnection: thePrinterConnection)
 					print(hostId)
-					self.printerModel = self.getPrinterModel(fromString: hostId)
+					self.printerModel = self.zbrGetPrinterModel(fromString: hostId)
 				} catch let configErr as NSError {
 					print(configErr.localizedDescription)
 					errorMsg = configErr.localizedDescription
@@ -206,7 +250,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		}
 	}
 	
-	func resetPrinter() -> Void {
+	func resetZbrPrinter() -> Void {
 		guard isPrinterSelected() else {
 			return
 		}
@@ -214,9 +258,9 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
 			var errorMsg = ""
 			
-			let thePrinterConnection = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter)
+			let thePrinterConnection = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter.serialNumber)
 			if !(thePrinterConnection?.open() ?? false) {
-				errorMsg = "Error connecting to printer " + self.selectedPrinter
+				errorMsg = "Error connecting to printer " + self.selectedPrinter.serialNumber
 			} else {
 				// try to reset the printer
 				do {
@@ -250,12 +294,12 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	}
 	
 	func clearPrinterData() -> Void {
-		self.printerSelected = false
-		self.printerInfoLabel.text = "No printer selected"
-		self.printerInfoLabel.isHighlighted = false
+		printerSelected = false
+		printerInfoLabel.text = "No printer selected"
+		printerInfoLabel.isHighlighted = false
 	}
 	
-	func printTextCpcl(_ text: String) -> Void {
+	func zbrPrintText(_ text: String) -> Void {
 		guard isPrinterSelected() else {
 			return
 		}
@@ -265,11 +309,11 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 			var nsError: NSError? = nil
 			
 			// Instantiate connection to Zebra Bluetooth accessory
-			let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter)
+			let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter.serialNumber)
 			
 			// Open the connection - physical connection is established here.
 			if !(thePrinterConn?.open() ?? false) {
-				errorMsg = "Error opening connection to printer " + self.selectedPrinter
+				errorMsg = "Error opening connection to printer " + self.selectedPrinter.serialNumber
 				self.clearPrinterData()
 			} else {
 				let printer = ZebraPrinterFactory.getInstance(thePrinterConn, with: PrinterLanguage.init(0))
@@ -310,7 +354,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 						let cpclString = "! 0 200 200 110 1\r\nTEXT 4 0 5 5 \(text)\r\nFORM\r\nPRINT\r\n"
 						let writtenBytes = thePrinterConn?.write(cpclString.data(using: String.Encoding.utf8), error: &nsError) ?? -1
 						if writtenBytes < 0 || nsError != nil {
-							errorMsg = "Error writing to the printer " + self.selectedPrinter
+							errorMsg = "Error writing to the printer " + self.selectedPrinter.serialNumber
 						}
 					}
 				} catch let statErr as NSError {
@@ -331,10 +375,10 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	}
 	
 	func getPrintArea(forImage image: CGImage, forModel model: String) -> CGSize {
-		let printerModel = supportedModels.contains(model) ? model : supportedModels[0]
+		let printerModel = supportedZbrModels.contains(model) ? model : supportedZbrModels[0]
 		let maxWidthZ220: Int = 380 // iMZ220-200dpi: (2 x 200) - 20 = 380
 		let maxWidthMz320: Int = 580 // iMZ320-200dpi: (3 x 200) - 20 = 580
-		let maxWidth: Int = (printerModel == supportedModels[0]) ? maxWidthZ220 : maxWidthMz320
+		let maxWidth: Int = (printerModel == supportedZbrModels[0]) ? maxWidthZ220 : maxWidthMz320
 		var targetWidth: Int = image.width
 		var targetHeight: Int = image.height
 		if targetWidth > maxWidth {
@@ -349,37 +393,38 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		return CGSize(width: targetWidth, height: targetHeight)
 	}
 	
-	func getPrinterModel(fromString string: String) -> String {
+	func zbrGetPrinterModel(fromString string: String) -> String {
 		let hostRange = NSRange(location: 0, length: string.characters.count)
 		let reModel = try! NSRegularExpression(pattern: "^(imz\\d+)", options: NSRegularExpression.Options.caseInsensitive)
 		let modelMatches = reModel.matches(in: string, options: NSRegularExpression.MatchingOptions.withoutAnchoringBounds, range: hostRange)
-		var printerModel = supportedModels[0]
+		var printerModel = supportedZbrModels[0]
 		if modelMatches.count > 0 {
 			printerModel = (string as NSString).substring(with: modelMatches[0].range)
 		}
 		return printerModel.lowercased()
 	}
 	
-	func printImageCpcl() -> Void {
+	func zbrPrintImage() -> Void {
 		guard isPrinterSelected() else {
+			return
+		}
+		guard imageView.image != nil else {
+			showAlert(asError: true, withMessage: "Please choose an image first")
 			return
 		}
 		guard let cgImage = imageView.image?.cgImage else {
 			showAlert(asError: true, withMessage: "Error getting CGImage")
 			return
 		}
-		if imageView.image == nil {
-			showAlert(asError: true, withMessage: "Please choose an image first")
-		}
 		showLoader(withMessage: "Printing image")
 		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
 			var errorMsg = ""
 			
 			// Instantiate connection to Zebra Bluetooth accessory
-			let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter)
+			let thePrinterConn = MfiBtPrinterConnection.init(serialNumber: self.selectedPrinter.serialNumber)
 			// Open the connection - physical connection is established here.
 			if !(thePrinterConn?.open() ?? false) {
-				errorMsg = "Error opening connection to printer " + self.selectedPrinter
+				errorMsg = "Error opening connection to printer " + self.selectedPrinter.serialNumber
 				self.clearPrinterData()
 			} else {
 				// try to print image
@@ -407,6 +452,125 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 				}
 			}
 		}
+	}
+	
+	// MARK: - Bixolon printer
+	
+	func bxlInitPrinter() -> Void {
+		guard selectedPrinter.serialNumber.isEmpty == false else {
+			showAlert(asError: true, withMessage: "Invalid serial number: " + selectedPrinter.serialNumber)
+			return
+		}
+		bxlPrinterController = BXPrinterController.getInstance()
+		bxlPrinterController.delegate = self
+		bxlPrinterController.lookupCount = 5
+		bxlPrinterController.autoConnection = Int(BXL_CONNECTIONMODE_NOAUTO)
+		bxlPrinter = BXPrinter()
+		bxlPrinter.serialNumber = selectedPrinter.serialNumber
+		bxlPrinter.connectionClass = UInt16(BXL_CONNECTIONCLASS_BT)
+		bxlPrinterController.target = bxlPrinter
+		bxlPrinterController.selectTarget()
+		bxlPrinterController.setTimeoutOnConnection(5.0)
+		bxlPrinterController.connect()
+	}
+	
+	func bxlPrintText(_ text: String) -> Void {
+		//
+		guard isPrinterSelected() else {
+			return
+		}
+		guard printerConnected else {
+			showAlert(asError: true, withMessage: "Printer is not connected")
+			return
+		}
+		showLoader(withMessage: "Printing text to BXL printer")
+		bxlPrinterController.printText(text + "\r\n")
+	}
+	
+	func bxlPrintImage(_ image: UIImage) -> Void {
+		guard isPrinterSelected() else {
+			return
+		}
+		guard printerConnected else {
+			showAlert(asError: true, withMessage: "Printer is not connected")
+			return
+		}
+		guard imageView.image != nil else {
+			showAlert(asError: true, withMessage: "Please choose an image first")
+			return
+		}
+		showLoader(withMessage: "Printing image")
+		bxlPrinterController.printBitmap(with: imageView.image!, width: -1, level: 05010)
+	}
+	
+	func message(_ controller: BXPrinterController!, text: String!) {
+		//
+	}
+	
+	func outputComplete(_ controller: BXPrinterController!, outputID: NSNumber!, errorStatus: NSNumber!) {
+		// This delegate is generated when printing is successful
+		hideLoader()
+	}
+	
+	func errorEvent(_ controller: BXPrinterController!, errorStatus: NSNumber!) {
+		//
+		hideLoader()
+	}
+	
+	func msrArrived(_ controller: BXPrinterController!, track: NSNumber!) {
+		//
+	}
+	
+	func msrTerminated(_ controller: BXPrinterController!) {
+		//
+	}
+	
+	func willLookupPrinters(_ controller: BXPrinterController!) {
+		//
+	}
+	
+	func didLookupPrinters(_ controller: BXPrinterController!) {
+		//
+	}
+	
+	func didFindPrinter(_ controller: BXPrinterController!, printer: BXPrinter!) {
+		//
+	}
+	
+	func willConnect(_ controller: BXPrinterController!, printer: BXPrinter!) {
+		//
+		showLoader(withMessage: "Connecting to BXL printer")
+	}
+	
+	func didConnect(_ controller: BXPrinterController!, printer: BXPrinter!) {
+		//
+		printerConnected = true
+		hideLoader()
+		// get printer model
+		selectedPrinter.model = printer.modelStr
+		print("Printer model: " + selectedPrinter.model)
+	}
+	
+	func didNotConnect(_ controller: BXPrinterController!, printer: BXPrinter!, withError error: Error!) {
+		//
+		hideLoader()
+		showAlert(asError: true, withMessage: error.localizedDescription)
+	}
+	
+	func didDisconnect(_ controller: BXPrinterController!, printer: BXPrinter!) {
+		// This method is called when the process to disconnect the printer is completed
+		printerConnected = false
+	}
+	
+	func didBeBrokenConnection(_ controller: BXPrinterController!, printer: BXPrinter!, withError error: Error!) {
+		// This method is called when the printer gets disconnected
+		hideLoader()
+		showAlert(asError: true, withMessage: error.localizedDescription)
+		printerConnected = false
+	}
+	
+	func targetPrinterPaired(_ controller: BXPrinterController!) {
+		//
 	}
 	
 	// MARK: - Misc methods
