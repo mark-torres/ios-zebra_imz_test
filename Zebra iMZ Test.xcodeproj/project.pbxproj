@@ -7,18 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A90788A51F6B0FD4001B110A /* libBXSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A90788A41F6B0FD4001B110A /* libBXSDK.a */; };
 		A90788A71F6B3570001B110A /* BTPrinterData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90788A61F6B3570001B110A /* BTPrinterData.swift */; };
 		A984D16E1F01CFF100E775DA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A984D16D1F01CFF100E775DA /* AppDelegate.swift */; };
 		A984D1701F01CFF100E775DA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A984D16F1F01CFF100E775DA /* ViewController.swift */; };
 		A984D1731F01CFF100E775DA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1711F01CFF100E775DA /* Main.storyboard */; };
 		A984D1751F01CFF100E775DA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A984D1741F01CFF100E775DA /* Assets.xcassets */; };
 		A984D1781F01CFF100E775DA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1761F01CFF100E775DA /* LaunchScreen.storyboard */; };
+		A9D8A6F81F6C5DB200AD1482 /* libBXSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */; };
+		A9D8A6FA1F6C5EA500AD1482 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */; };
+		A9D8A6FC1F6C5EAB00AD1482 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */; };
 		A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9F44A431F02C8EC007A0285 /* libZSDK_API.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A90788A41F6B0FD4001B110A /* libBXSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBXSDK.a; path = "../SDKs/Bixolon/spp-r200ii/lib/libBXSDK.a"; sourceTree = "<group>"; };
 		A90788A61F6B3570001B110A /* BTPrinterData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BTPrinterData.swift; sourceTree = "<group>"; };
 		A984D16A1F01CFF100E775DA /* Zebra iMZ Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zebra iMZ Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A984D16D1F01CFF100E775DA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -27,6 +28,9 @@
 		A984D1741F01CFF100E775DA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A984D1771F01CFF100E775DA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A984D1791F01CFF100E775DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBXSDK.a; path = "../SDKs/Bixolon/spp-r200ii/lib_3.16/libBXSDK.a"; sourceTree = "<group>"; };
+		A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		A9F44A3F1F02C829007A0285 /* Zebra iMZ Test-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Zebra iMZ Test-Bridging-Header.h"; sourceTree = "<group>"; };
 		A9F44A431F02C8EC007A0285 /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libZSDK_API.a; path = ../../../../Applications/link_os_sdk/iOS/v1.4.957/lib/libZSDK_API.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -36,7 +40,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A90788A51F6B0FD4001B110A /* libBXSDK.a in Frameworks */,
+				A9D8A6FC1F6C5EAB00AD1482 /* ExternalAccessory.framework in Frameworks */,
+				A9D8A6FA1F6C5EA500AD1482 /* CoreBluetooth.framework in Frameworks */,
+				A9D8A6F81F6C5DB200AD1482 /* libBXSDK.a in Frameworks */,
 				A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -79,8 +85,10 @@
 		A9F44A421F02C8EC007A0285 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */,
+				A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */,
+				A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */,
 				A9F44A431F02C8EC007A0285 /* libZSDK_API.a */,
-				A90788A41F6B0FD4001B110A /* libBXSDK.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -290,14 +298,14 @@
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					/Applications/link_os_sdk/iOS/v1.4.957/lib/include,
-					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib/Headers",
+					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16/Headers",
 				);
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					/Applications/link_os_sdk/iOS/v1.4.957/lib,
-					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib",
+					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16",
 				);
 				OTHER_LDFLAGS = "-lBXSDK";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.hsoft.Zebra-iMZ-Test";
@@ -318,14 +326,14 @@
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = (
 					/Applications/link_os_sdk/iOS/v1.4.957/lib/include,
-					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib/Headers",
+					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16/Headers",
 				);
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					/Applications/link_os_sdk/iOS/v1.4.957/lib,
-					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib",
+					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16",
 				);
 				OTHER_LDFLAGS = "-lBXSDK";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.hsoft.Zebra-iMZ-Test";
