@@ -8,6 +8,12 @@
 
 import UIKit
 
+enum BxlPrintAction {
+	case none
+	case text
+	case image
+}
+
 class ViewController: UIViewController, UINavigationControllerDelegate, UIImagePickerControllerDelegate, UITextFieldDelegate, BXPrinterControlDelegate {
 	
 	@IBOutlet weak var textMessage: UITextField!
@@ -28,6 +34,8 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	
 	var printerModel: String!
 	
+	var textToPrint: String!
+	
 	var availablePrinters: [BTPrinterData]!
 	
 	var selectedPrinter: BTPrinterData!
@@ -36,11 +44,13 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	
 	let supportedZbrModels: [String] = ["imz220", "imz320"]
 	
-	let supportedBxlModels: [String] = ["spp-r200ii"]
+	let supportedBxlModels: [String] = ["spp-r200ii", "spp-r200iii"]
 	
 	var printerSelected: Bool!
 	
 	var imageSelected: Bool!
+	
+	var bxlAction: BxlPrintAction!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -57,6 +67,8 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		printerSelected = false
 		printerModel = ""
 		imageSelected = false
+		textToPrint = ""
+		bxlAction = .none
 		
 		// initialize controller
 		bxlPrinterController = BXPrinterController.getInstance()
@@ -85,12 +97,13 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	@IBAction func tapPrintText(_ sender: AnyObject) {
 		let text = textMessage.text?.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) ?? ""
 		if !text.isEmpty {
+			textToPrint = text
 			switch selectedPrinter.brand {
 			case "zebra":
-				zbrPrintText(text)
+				zbrPrintText()
 				break
 			case "bixolon":
-				bxlPrintText(text)
+				bxlPrintText()
 				break
 			default:
 				showAlert(asError: true, withMessage: "Unknown printer brand")
@@ -214,6 +227,13 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		present(actionSheet, animated: true, completion: nil)
 	}
 	
+	func unselectPrinter() -> Void {
+		printerInfoLabel.text = "No printer selected"
+		printerInfoLabel.isHighlighted = false
+		printerSelected = false
+		selectedPrinter = BTPrinterData()
+	}
+	
 	// MARK: - Zebra printer
 	
 	func getFirstBtPrinter() -> String {
@@ -323,7 +343,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		printerInfoLabel.isHighlighted = false
 	}
 	
-	func zbrPrintText(_ text: String) -> Void {
+	func zbrPrintText() -> Void {
 		guard isPrinterSelected() else {
 			return
 		}
@@ -375,7 +395,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 						}
 						errorMsg = msgs.joined(separator: "\n")
 					} else {
-						let cpclString = "! 0 200 200 110 1\r\nTEXT 4 0 5 5 \(text)\r\nFORM\r\nPRINT\r\n"
+						let cpclString = "! 0 200 200 110 1\r\nTEXT 4 0 5 5 \(self.textToPrint)\r\nFORM\r\nPRINT\r\n"
 						let writtenBytes = thePrinterConn?.write(cpclString.data(using: String.Encoding.utf8), error: &nsError) ?? -1
 						if writtenBytes < 0 || nsError != nil {
 							errorMsg = "Error writing to the printer " + self.selectedPrinter.serialNumber
@@ -494,39 +514,29 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		bxlPrinterController.target = bxlPrinter
 		bxlPrinterController.selectTarget()
 		bxlPrinterController.setTimeoutOnConnection(5.0)
-		
-		// connect to printer
-		showLoader(withMessage: "Connecting to printer...")
-		bxlPrinterController.connect()
 	}
 	
-	func bxlPrintText(_ text: String) -> Void {
+	func bxlPrintText() -> Void {
 		//
 		guard isPrinterSelected() else {
 			return
 		}
-		guard bxlPrinterController.isConnected() else {
-			showAlert(asError: true, withMessage: "Printer is not connected")
-			return
-		}
-		bxlPrinterController.printText(text + "\r\n\r\n\r\n")
+		bxlAction = .text
+		showLoader(withMessage: "Printing text...")
+		bxlPrinterController.connect()
 	}
 	
 	func bxlPrintImage() -> Void {
 		guard isPrinterSelected() else {
 			return
 		}
-		guard bxlPrinterController.isConnected() else {
-			showAlert(asError: true, withMessage: "Printer is not connected")
-			return
-		}
 		guard imageView.image != nil else {
 			showAlert(asError: true, withMessage: "Please choose an image first")
 			return
 		}
-		//showLoader(withMessage: "Printing image")
-		let result = bxlPrinterController.printBitmap(with: imageView.image!, width: Int(BXL_WIDTH_FULL), level: 1035)
-		print(bxlResultString(result))
+		bxlAction = .image
+		showLoader(withMessage: "Printing image...")
+		bxlPrinterController.connect()
 	}
 	
 	func bxlStateString(_ stateCode: Int) -> String {
@@ -607,12 +617,20 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		//
 		print("BXL:message")
 		print(text)
+		if bxlPrinterController.isConnected() {
+			bxlPrinterController.disconnect()
+		}
+		unselectPrinter()
 	}
 	
 	func outputComplete(_ controller: BXPrinterController!, outputID: NSNumber!, errorStatus: NSNumber!) {
 		// This delegate is generated when printing is successful
 		print("BXL:outputComplete")
 		hideLoader()
+		bxlPrinterController.lineFeed(5)
+		if bxlPrinterController.isConnected() {
+			bxlPrinterController.disconnect()
+		}
 	}
 	
 	func errorEvent(_ controller: BXPrinterController!, errorStatus: NSNumber!) {
@@ -655,10 +673,22 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	func didConnect(_ controller: BXPrinterController!, printer: BXPrinter!) {
 		//
 		print("BXL:didConnect")
-		hideLoader()
 		// get printer model
 		selectedPrinter.model = printer.modelStr
 		print("Printer model: " + selectedPrinter.model)
+		// print
+		bxlPrinterController.asyncMode(true)
+		switch bxlAction! {
+		case .text:
+			bxlPrinterController.printText(textToPrint)
+			break
+		case .image:
+			let result = bxlPrinterController.printBitmap(with: imageView.image!, width: Int(BXL_WIDTH_FULL), level: 1050)
+			print(bxlResultString(result))
+			break
+		default:
+			print("Unknown action")
+		}
 	}
 	
 	func didNotConnect(_ controller: BXPrinterController!, printer: BXPrinter!, withError error: Error!) {
