@@ -395,7 +395,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 						}
 						errorMsg = msgs.joined(separator: "\n")
 					} else {
-						let cpclString = "! 0 200 200 110 1\r\nTEXT 4 0 5 5 \(self.textToPrint)\r\nFORM\r\nPRINT\r\n"
+						let cpclString = "! 0 200 200 110 1\r\nTEXT 4 0 5 5 \(self.textToPrint!)\r\nFORM\r\nPRINT\r\n"
 						let writtenBytes = thePrinterConn?.write(cpclString.data(using: String.Encoding.utf8), error: &nsError) ?? -1
 						if writtenBytes < 0 || nsError != nil {
 							errorMsg = "Error writing to the printer " + self.selectedPrinter.serialNumber
@@ -617,6 +617,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		//
 		print("BXL:message")
 		print(text)
+		showAlert(asError: true, withMessage: text!)
 		if bxlPrinterController.isConnected() {
 			bxlPrinterController.disconnect()
 		}
@@ -680,7 +681,8 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		bxlPrinterController.asyncMode(true)
 		switch bxlAction! {
 		case .text:
-			bxlPrinterController.printText(textToPrint)
+			let result = bxlPrinterController.printText(textToPrint)
+			print(bxlResultString(result))
 			break
 		case .image:
 			let result = bxlPrinterController.printBitmap(with: imageView.image!, width: Int(BXL_WIDTH_FULL), level: 1050)
