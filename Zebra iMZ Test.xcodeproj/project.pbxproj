@@ -13,10 +13,13 @@
 		A984D1731F01CFF100E775DA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1711F01CFF100E775DA /* Main.storyboard */; };
 		A984D1751F01CFF100E775DA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A984D1741F01CFF100E775DA /* Assets.xcassets */; };
 		A984D1781F01CFF100E775DA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A984D1761F01CFF100E775DA /* LaunchScreen.storyboard */; };
+		A9C83A38206964A300447EBF /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9C83A37206964A300447EBF /* libZSDK_API.a */; };
 		A9D8A6F81F6C5DB200AD1482 /* libBXSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */; };
 		A9D8A6FA1F6C5EA500AD1482 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */; };
 		A9D8A6FC1F6C5EAB00AD1482 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */; };
-		A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9F44A431F02C8EC007A0285 /* libZSDK_API.a */; };
+		A9DD7C1122CFDF0400F3B637 /* StarIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9DD7C1022CFDF0400F3B637 /* StarIO.framework */; };
+		A9DD7C1322CFDF1300F3B637 /* StarIO_Extension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9DD7C1222CFDF1300F3B637 /* StarIO_Extension.framework */; };
+		A9DD7C1522D013C600F3B637 /* SMComms.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9DD7C1422D013C600F3B637 /* SMComms.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,11 +31,14 @@
 		A984D1741F01CFF100E775DA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A984D1771F01CFF100E775DA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A984D1791F01CFF100E775DA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A9C83A37206964A300447EBF /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libZSDK_API.a; path = ../../../../Applications/link_os_sdk/iOS/v1.5.1049/lib/libZSDK_API.a; sourceTree = "<group>"; };
 		A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libBXSDK.a; path = "../SDKs/Bixolon/spp-r200ii/lib_3.16/libBXSDK.a"; sourceTree = "<group>"; };
 		A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		A9DD7C1022CFDF0400F3B637 /* StarIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StarIO.framework; path = "Zebra iMZ Test/StarPRNT_SDK_V5_10_0/StarIO.framework"; sourceTree = "<group>"; };
+		A9DD7C1222CFDF1300F3B637 /* StarIO_Extension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StarIO_Extension.framework; path = "Zebra iMZ Test/StarPRNT_SDK_V5_10_0/StarIO_Extension.framework"; sourceTree = "<group>"; };
+		A9DD7C1422D013C600F3B637 /* SMComms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMComms.swift; sourceTree = "<group>"; };
 		A9F44A3F1F02C829007A0285 /* Zebra iMZ Test-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Zebra iMZ Test-Bridging-Header.h"; sourceTree = "<group>"; };
-		A9F44A431F02C8EC007A0285 /* libZSDK_API.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libZSDK_API.a; path = ../../../../Applications/link_os_sdk/iOS/v1.4.957/lib/libZSDK_API.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,10 +46,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9DD7C1322CFDF1300F3B637 /* StarIO_Extension.framework in Frameworks */,
+				A9DD7C1122CFDF0400F3B637 /* StarIO.framework in Frameworks */,
+				A9C83A38206964A300447EBF /* libZSDK_API.a in Frameworks */,
 				A9D8A6FC1F6C5EAB00AD1482 /* ExternalAccessory.framework in Frameworks */,
 				A9D8A6FA1F6C5EA500AD1482 /* CoreBluetooth.framework in Frameworks */,
 				A9D8A6F81F6C5DB200AD1482 /* libBXSDK.a in Frameworks */,
-				A9F44A441F02C8EC007A0285 /* libZSDK_API.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				A984D16D1F01CFF100E775DA /* AppDelegate.swift */,
+				A9DD7C1422D013C600F3B637 /* SMComms.swift */,
 				A984D16F1F01CFF100E775DA /* ViewController.swift */,
 				A984D1711F01CFF100E775DA /* Main.storyboard */,
 				A984D1741F01CFF100E775DA /* Assets.xcassets */,
@@ -85,10 +94,12 @@
 		A9F44A421F02C8EC007A0285 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A9DD7C1222CFDF1300F3B637 /* StarIO_Extension.framework */,
+				A9DD7C1022CFDF0400F3B637 /* StarIO.framework */,
+				A9C83A37206964A300447EBF /* libZSDK_API.a */,
 				A9D8A6FB1F6C5EAB00AD1482 /* ExternalAccessory.framework */,
 				A9D8A6F91F6C5EA500AD1482 /* CoreBluetooth.framework */,
 				A9D8A6F71F6C5DB200AD1482 /* libBXSDK.a */,
-				A9F44A431F02C8EC007A0285 /* libZSDK_API.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -170,6 +181,7 @@
 				A984D1701F01CFF100E775DA /* ViewController.swift in Sources */,
 				A984D16E1F01CFF100E775DA /* AppDelegate.swift in Sources */,
 				A90788A71F6B3570001B110A /* BTPrinterData.swift in Sources */,
+				A9DD7C1522D013C600F3B637 /* SMComms.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,15 +308,20 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				DEVELOPMENT_TEAM = VPJJQVPPXZ;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Zebra\\ iMZ\\ Test/StarPRNT_SDK_V5_10_0",
+					"$(PROJECT_DIR)/Zebra\\ iMZ\\ Test/StarPRNT_SDK_V5_10_0",
+				);
 				HEADER_SEARCH_PATHS = (
-					/Applications/link_os_sdk/iOS/v1.4.957/lib/include,
+					/Applications/link_os_sdk/iOS/v1.5.1049/lib/include,
 					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16/Headers",
 				);
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
-					/Applications/link_os_sdk/iOS/v1.4.957/lib,
+					/Applications/link_os_sdk/iOS/v1.5.1049/lib,
 					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16",
 				);
 				OTHER_LDFLAGS = "-lBXSDK";
@@ -324,15 +341,20 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				DEVELOPMENT_TEAM = VPJJQVPPXZ;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Zebra\\ iMZ\\ Test/StarPRNT_SDK_V5_10_0",
+					"$(PROJECT_DIR)/Zebra\\ iMZ\\ Test/StarPRNT_SDK_V5_10_0",
+				);
 				HEADER_SEARCH_PATHS = (
-					/Applications/link_os_sdk/iOS/v1.4.957/lib/include,
+					/Applications/link_os_sdk/iOS/v1.5.1049/lib/include,
 					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16/Headers",
 				);
 				INFOPLIST_FILE = "Zebra iMZ Test/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
-					/Applications/link_os_sdk/iOS/v1.4.957/lib,
+					/Applications/link_os_sdk/iOS/v1.5.1049/lib,
 					"/Users/markushi/XCode/SDKs/Bixolon/spp-r200ii/lib_3.16",
 				);
 				OTHER_LDFLAGS = "-lBXSDK";

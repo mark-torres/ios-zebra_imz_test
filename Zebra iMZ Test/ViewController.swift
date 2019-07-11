@@ -105,6 +105,9 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 			case "bixolon":
 				bxlPrintText()
 				break
+			case "star":
+				strPrintText()
+				break
 			default:
 				showAlert(asError: true, withMessage: "Unknown printer brand")
 			}
@@ -126,6 +129,9 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 			break
 		case "bixolon":
 			bxlPrintImage()
+			break
+		case "star":
+			strPrintImage()
 			break
 		default:
 			showAlert(asError: true, withMessage: "Unknown printer brand")
@@ -172,6 +178,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 			let sam: EAAccessoryManager = EAAccessoryManager.shared()
 			for accessory in sam.connectedAccessories {
 				//print(accessory.protocolStrings)
+				print(accessory)
 				// get Zebra printers
 				if accessory.protocolStrings.contains("com.zebra.rawport") {
 					let btPrinter = BTPrinterData()
@@ -188,6 +195,15 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 					btPrinter.name = accessory.name
 					// model contains the mac address
 					btPrinter.serialNumber = accessory.modelNumber
+					self.availablePrinters.append(btPrinter)
+				}
+				// get Star printers
+				if accessory.protocolStrings.contains("jp.star-m.starpro"){
+					let btPrinter = BTPrinterData()
+					btPrinter.brand = "star"
+					btPrinter.name = accessory.name
+					// model contains the mac address
+					btPrinter.serialNumber = accessory.serialNumber
 					self.availablePrinters.append(btPrinter)
 				}
 			}
@@ -218,6 +234,8 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 					self.zbInitPrinter()
 				} else if self.selectedPrinter.brand == "bixolon" {
 					self.bxlInitPrinter()
+				} else if self.selectedPrinter.brand == "star" {
+					self.strInitPrinter()
 				}
 			})
 			actionSheet.addAction(action)
@@ -232,6 +250,19 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 		printerInfoLabel.isHighlighted = false
 		printerSelected = false
 		selectedPrinter = BTPrinterData()
+	}
+	
+	func isPrinterSelected() -> Bool {
+		if !printerSelected	{
+			showAlert(asError: true, withMessage: "You need to select a printer first")
+		}
+		return printerSelected
+	}
+	
+	func clearPrinterData() -> Void {
+		printerSelected = false
+		printerInfoLabel.text = "No printer selected"
+		printerInfoLabel.isHighlighted = false
 	}
 	
 	// MARK: - Zebra printer
@@ -328,19 +359,6 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 				}
 			}
 		}
-	}
-	
-	func isPrinterSelected() -> Bool {
-		if !printerSelected	{
-			showAlert(asError: true, withMessage: "You need to select a printer first")
-		}
-		return printerSelected
-	}
-	
-	func clearPrinterData() -> Void {
-		printerSelected = false
-		printerInfoLabel.text = "No printer selected"
-		printerInfoLabel.isHighlighted = false
 	}
 	
 	func zbrPrintText() -> Void {
@@ -715,6 +733,67 @@ class ViewController: UIViewController, UINavigationControllerDelegate, UIImageP
 	func targetPrinterPaired(_ controller: BXPrinterController!) {
 		//
 		print("BXL:targetPrinterPaired")
+	}
+	
+	// MARK: - Star printer
+	
+	func strInitPrinter() -> Void {
+		showAlert(asError: false, withMessage: "Init Star printer")
+	}
+	
+	func strPrintImage() -> Void {
+		guard isPrinterSelected() else {
+			return
+		}
+		guard imageView.image != nil else {
+			showAlert(asError: true, withMessage: "Please choose an image first")
+			return
+		}
+		let builder:ISCBBuilder = StarIoExt.createCommandBuilder(StarIoExtEmulation.starPRNT)
+		builder.beginDocument()
+		builder.appendBitmap(imageView.image!, diffusion: true, width: PaperSizeIndex.threeInch.rawValue, bothScale: true)
+		builder.appendByte(0x0a) // hex new line (\n)
+		builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
+		builder.endDocument()
+		
+		strSendCommands(builder.commands.copy() as! Data)
+	}
+	
+	func strPrintText() -> Void {
+		guard isPrinterSelected() else {
+			return
+		}
+		let textData = textToPrint.data(using: String.Encoding.ascii)
+		
+		let builder:ISCBBuilder = StarIoExt.createCommandBuilder(StarIoExtEmulation.starPRNT)
+		builder.beginDocument()
+		builder.append(textData)
+		builder.appendByte(0x0a) // hex new line (\n)
+		builder.appendCutPaper(SCBCutPaperAction.partialCutWithFeed)
+		builder.endDocument()
+		
+		strSendCommands(builder.commands.copy() as! Data)
+	}
+	
+	func strSendCommands(_ commands: Data?) -> Void {
+		let portName:     String = "BT:\(selectedPrinter.name)"
+		
+		showLoader(withMessage: "Printing...")
+		DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+			_ = SMComms.sendCommands(
+				commands,
+				portName: portName,
+				timeout: 10000,
+				completionHandler: { (success, title, message) in
+					DispatchQueue.main.async {
+						self.hideLoader()
+						if !success {
+							self.showAlert(asError: true, withMessage: message)
+						}
+					}
+				}
+			)
+		}
 	}
 	
 	// MARK: - Misc methods

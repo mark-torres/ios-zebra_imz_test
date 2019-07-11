@@ -34,6 +34,7 @@
 	<array>
 		<string>com.zebra.rawport</string>
 		<string>com.bixolon.protocol</string>
+		<string>jp.star-m.starpro</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
